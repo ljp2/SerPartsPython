@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+
+#Wing IDE
+*.wpr
+*.wpu
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
