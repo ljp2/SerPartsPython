@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 ########################################################################
 class Zipcode:
     """"""
@@ -11,8 +13,5 @@ class Zipcode:
         self.fct: float = None
         self.high: float = None
         self.low: float = None
-        self.locations = []
-                
+        self.location_links = []  # this will be changed to an ordered dictionary during setup
         
-    
-    

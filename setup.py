@@ -1,12 +1,11 @@
 import pandas as pd
 from collections import namedtuple
+from collections import OrderedDict
 
 import params
 
 from zipcode import Zipcode
 from location import Location
-
-TransportationCosts = {}
       
 ########################################################################
 LocationLink = namedtuple('LocationLink', ['location', 'cost', 'hours', 'miles'])
@@ -85,36 +84,49 @@ def readTransportationLinksFile(df_forecast):
     global TransportationCosts
     df = pd.read_csv(params.TRANSPORTATION_LINKS_FILENAME, delimiter='|')
     df = df[df.apply(axis=1, func=lambda x: x.zip_code in Zipcode.all_zipcodes_set)]
-    
     #
     # create the locations for each zipcode then sort by increasing (cost, hrs, miles)
     # add the cost to the TransportationCosts dictionary
     #
     Zipcode.all_locations_set = set()
     for row in df.itertuples():
-        Zipcode.zipcodes[row.zip_code].locations.append( 
+        Zipcode.zipcodes[row.zip_code].location_links.append( 
            LocationLink(row.nn_loc, row.link_cost, row.link_hour, row.link_miles)
         )
         Zipcode.all_locations_set.add(row.nn_loc)
-        TransportationCosts[ (row.zip_code, row.nn_loc) ] = row.link_cost
+        #TransportationCosts[ (row.zip_code, row.nn_loc) ] = row.link_cost
+    #
+    # for each zipcode sort the links
+    # then change the locations list to an OrderedDict
+    #
     for zipcode in Zipcode.zipcodes.values():
-            zipcode.locations.sort(key = lambda x: x[1:])   
+            zipcode.location_links.sort(key = lambda x: x[1:])   
+            zipcode.location_links = OrderedDict([ (x[0], x[1:]) for x in zipcode.location_links])
+        
             
             
 #----------------------------------------------------------------------
 def readLocationLinksFile():
     """
     read the locations_links.dat file 
-    determine relevant neighborhood locations for each primary_location relevant to zipcodes
+    determine relevant neighborhood locations for each primary_location identified by the zipcodes
     add link information to locations
     """
     global TransportationCosts
     df = pd.read_csv(params.LOCATION_LINKS_FILENAME, delimiter='|')
+    #
+    # keep (eliminate others) locations that are locations for zipcodes
+    #
     df = df[df.apply(axis=1, func=lambda x: x.primary_loc in Zipcode.all_locations_set)]
+    #
+    # create all locations
+    #
     Location.all_locations_set = Zipcode.all_locations_set | set(df.nn_loc.unique())
     Location.locations = {}
     for location in Location.all_locations_set:
         Location.locations[location] = Location(location)
+    #
+    # create the location->locations
     for row in df.itertuples():
         TransportationCosts[ (row.nn_loc, row.primary_loc) ] = row.link_cost
         
@@ -126,7 +138,7 @@ def determinePrimaryZipcodes():
     and calculate the location internal demands
     """
     for zipcode in Zipcode.zipcodes.values():
-        primary_location = Location.locations[ zipcode.locations[0].location ]
+        primary_location = Location.locations[ next(iter(zipcode.locations.keys())) ]  # works because zipcode.locations is OrderedDict
         primary_location.primary_zipcodes_demands[zipcode.zipcode] = zipcode.fct
         primary_location.demand_internal += zipcode.fct
         

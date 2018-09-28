@@ -13,7 +13,14 @@ def init():
         location.prob_inventory_above_reserve = params.PDTUSA_LOW
         location.prob_part_available = params.PDTUSA_LOW
         
-        location.calculateIstar()
+        location.setAlpha()
+        location.setBeta()
+        location.setEOQ()
+        location.setKQmax
+        location.setKEmax()
+        location.setIstar()
+        location.setImax()
+        
         
         
 
