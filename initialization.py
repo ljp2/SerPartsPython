@@ -9,7 +9,6 @@ def init():
     """"""
     for location in Location.locations.values():
         location.demand_external = 0.0
-        location.demand = location.demand_internal
         location.prob_inventory_above_reserve = params.PDTUSA_LOW
         location.prob_part_available = params.PDTUSA_LOW
         

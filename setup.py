@@ -81,7 +81,6 @@ def readTransportationLinksFile(df_forecast):
     Set Zipcode.all_locations_set
     Set zipcode-location TransportationCosts
     """
-    global TransportationCosts
     df = pd.read_csv(params.TRANSPORTATION_LINKS_FILENAME, delimiter='|')
     df = df[df.apply(axis=1, func=lambda x: x.zip_code in Zipcode.all_zipcodes_set)]
     #
@@ -112,7 +111,6 @@ def readLocationLinksFile():
     determine relevant neighborhood locations for each primary_location identified by the zipcodes
     add link information to locations
     """
-    global TransportationCosts
     df = pd.read_csv(params.LOCATION_LINKS_FILENAME, delimiter='|')
     #
     # keep (eliminate others) locations that are locations for zipcodes
@@ -126,9 +124,19 @@ def readLocationLinksFile():
     for location in Location.all_locations_set:
         Location.locations[location] = Location(location)
     #
-    # create the location->locations
+    # determine all location->links
+    #
     for row in df.itertuples():
-        TransportationCosts[ (row.nn_loc, row.primary_loc) ] = row.link_cost
+        Location.locations[row.primary_loc].location_links.append( 
+            LocationLink(row.nn_loc, row.link_cost, row.link_hour, row.link_miles)
+            )
+    #
+    # for each location sort the links
+    # then change the locations list to an OrderedDict
+    #
+    for location in Location.locations.values():
+        location.location_links.sort(key = lambda x: x[1:])   
+        location.location_links = OrderedDict([ (x[0], x[1:]) for x in location.location_links])    
         
         
 #----------------------------------------------------------------------
@@ -138,7 +146,7 @@ def determinePrimaryZipcodes():
     and calculate the location internal demands
     """
     for zipcode in Zipcode.zipcodes.values():
-        primary_location = Location.locations[ next(iter(zipcode.locations.keys())) ]  # works because zipcode.locations is OrderedDict
+        primary_location = Location.locations[ next(iter(zipcode.location_links.keys())) ]  # works because zipcode.locations is OrderedDict
         primary_location.primary_zipcodes_demands[zipcode.zipcode] = zipcode.fct
         primary_location.demand_internal += zipcode.fct
         
