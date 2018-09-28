@@ -13,7 +13,6 @@ class Location:
     def __init__(self, location):
         self.location = location
         self.primary_zipcodes_demands = {}
-        self.location_links = None
         self.prob_inventory_above_reserve = params.PDTUSA_LOW
         self.prob_part_available = params.PDTUSA_LOW
         self.demand_internal = 0.0
@@ -28,7 +27,7 @@ class Location:
         self.KEmax = None  # the upper bound on state dimension 3
         self.Istar = None  # largest inventory value at location that allows a replenishment or reserve restoration decision
         self.Imax = None   # the upper bound on state dimension 1
-    
+        self.location_links = []  # this will be changed to an ordered dictionary during setup
     
     def setAlpha(self, alpha=None):
         if alpha is not None:
